@@ -1,0 +1,87 @@
+--- mirador.js.orig	2018-05-16 14:53:19.000000000 -0400
++++ mirador.js	2018-05-16 14:53:31.000000000 -0400
+@@ -38832,6 +38832,10 @@
+       this.canvasID = canvasID;
+       this.currentImgIndex = $.getImageIndexById(this.imagesList, this.canvasID);
+       this.currentImg = this.imagesList[this.currentImgIndex];
++
++       //si.edu patch -- this function not used.
++       _this.updateCanvasInfo(this.currentImg);
++
+       var newList = this.getStitchList();
+       var is_same = this.stitchList.length == newList.length && this.stitchList.every(function(element, index) {
+         return element === newList[index];
+@@ -40496,6 +40500,52 @@
+       });
+     },
+ 
++ updateCanvasInfo: function(manifestJson,canvasJson) {
++      var _this = this,
++          tplData = {
++            metadataListingCls: this.metadataListingCls
++          };
++
++var data = "";
++
++ data="<div class=\"metadata-item\"><div class=\"metadata-label\"><b>Manifest metadata</b></div><div class=\"metadata-value\">_______</div></div>";
++ data=data+"<div class=\"metadata-item\"><div class=\"metadata-label\">Label:</div><div class=\"metadata-value\"><b>"+manifestJson.label+"</b></div></div>";
++ data=data+"<div class=\"metadata-item\"><div class=\"metadata-label\">Description:</div><div class=\"metadata-value\">"+manifestJson.description+"</div></div>";
++//         
++    	if (manifestJson.metadata) {
++        value = "";
++        label = "";
++        jQuery.each(manifestJson.metadata, function(index, item) {
++          label = $.JsonLd.getTextValue(item.label);
++          value = $.JsonLd.getTextValue(item.value);
++data=data+"<div class=\"metadata-item\"><div class=\"metadata-label\">"+label+":</div><div class=\"metadata-value\">"+value+"</div></div>";
++      
++        });
++      }
++
++      //vvvvv This is *not* how this should be done.
++      jQuery.each(canvasJson, function(metadataKey, metadataValues) {
++     
++ if (metadataKey == ("metadata")){
++ 		
++ 		 data=data+"<div class=\"metadata-item\"><div class=\"metadata-label\"><br/><b>Canvas metadata</b></div><div class=\"metadata-value\">_______</div></div>";
++      
++      jQuery.each(metadataValues, function(key, value) {
++     if (typeof value === 'object') {
++     data=data+"<div class=\"metadata-item\"><div class=\"metadata-label\">"+value.label+":</div><div class=\"metadata-value\">"+value.value+"</div></div>";
++           }
++        });
++     
++      }
++
++   });
++
++	//data=data+"</ul>";
++_this.element.parent().parent().find('.metadata-listing:first').html(data);
++
++      
++},
++
+     updateImage: function(canvasID) {
+       var _this = this;
+       if (this.canvasID !== canvasID) {
+@@ -40504,7 +40554,11 @@
+         });
+         this.canvasID = canvasID;
+         this.currentImgIndex = $.getImageIndexById(this.imagesList, canvasID);
+-        this.currentImg = this.imagesList[this.currentImgIndex];
++        this.canvasJson = this.imagesList[this.currentImgIndex];
++
++   //si.edu patch
++   		//console.log( JSON.stringify(this.manifest.jsonLd ));
++       _this.updateCanvasInfo(this.manifest.jsonLd, this.canvasJson);
+ 
+         var newCanvas = this.canvases[_this.canvasID];
+         var canvasBounds = newCanvas.getBounds();
+@@ -40804,6 +40858,7 @@
+       _this.manifest = _this.manifest.jsonLd;
+       this.metadataTypes = {};
+ 
++	//si.edu patch
+       this.metadataTypes.details = _this.getMetadataDetailsWithCanvas(_this.manifest,_this.manifest.sequences[0].canvases[0]);
+       this.metadataTypes.rights = _this.getMetadataRights(_this.manifest);
+       this.metadataTypes.links = _this.getMetadataLinks(_this.manifest);
